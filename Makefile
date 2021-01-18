@@ -1,13 +1,15 @@
-.PHONY: examples
-examples:
-	$(MAKE) -C examples/ -B
+all: dist
 
-vendor/%/Makefile:
-	bash -c 'source vendor/github.com/reconquest/import.bash/import.bash && \
-		import:use "$*"'
+build:
+	mkdir build
 
-include vendor/github.com/reconquest/test-runner.bash/Makefile
+dist: build
+	cd build && cmake .. && cpack
 
-DST = /usr/local/bin/
-install:
-	cp shdoc $(DST)
+install: dist
+	sudo dpkg -i build/*.deb
+
+clean:
+	rm -rf build
+
+.PHONY: all clean dist install

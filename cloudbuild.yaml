@@ -23,32 +23,19 @@ steps:
         EOF
         ssh-keyscan -t rsa github.com > /root/.ssh/known_hosts
         git remote set-url origin git@github.com:MisoRobotics/$REPO_NAME.git
-        git fetch origin $_BASE_BRANCH:$_BASE_BRANCH
-        git submodule init
-        git submodule update
+        git fetch origin $_BASE_BRANCH:refs/remotes/origin/$_BASE_BRANCH
     volumes:
       - name: 'ssh'
         path: /root/.ssh
 
   - id: 'Run gitlint'
-    name: gcr.io/software-builds/gitlint
+    name: gcr.io/software-builds/miso-cloud-builders/gitlint
     args:
       - '--commits'
-      - '$_BASE_BRANCH..$COMMIT_SHA'
+      - 'origin/$_BASE_BRANCH..$COMMIT_SHA'
       - '-c'
       - 'general.ignore-fixup-commits=false'
       - '-c'
       - 'general.ignore-squash-commits=false'
       - '-c'
       - 'title-must-not-contain-word.words=WIP,FIXUP,SQUASH'
-
-  - id: 'Build distribution'
-    name: gcr.io/software-builds/miso-cloud-builders/cmake:latest
-    waitFor: ['Set up git repository']
-    entrypoint: 'make'
-    args: ['dist']
-
-artifacts:
-  objects:
-    location: gs://software-releases-public/deb
-    paths: ['build/*.deb']
